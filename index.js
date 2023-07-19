@@ -1,12 +1,19 @@
 import { Bot, session } from "grammy";
 import dotenv from "dotenv";
-import { initialState, extractParams, postChannel } from "./utills.js";
+import {
+  initialState,
+  extractParams,
+  postChannel,
+  generateTags,
+} from "./utills.js";
 
 // load environments
 dotenv.config();
 
 // connect to the bot
 const bot = new Bot(process.env.BOT_TOKEN);
+
+const channelID = process.env.CHANNEL_ID;
 
 // create a session
 bot.use(session({ initial: initialState }));
@@ -31,19 +38,30 @@ bot.command("post", (ctx) => {
   ctx.session.task = "post";
   ctx.reply("Give me the title of the post ");
 });
-
 bot.on("message:text", async (ctx) => {
-  const { task, title, content, comment } = ctx.session;
+  const { task, title, content, comment, postToReply, tags } = ctx.session;
+  const { text } = ctx.message;
   if (task === "post") {
-    if (ctx.session.title && ctx) {
-      ctx.reply("Now, give me the content of the post");
+    if (title && content == null) {
+      ctx.session.content = text;
+      ctx.reply("give me some tags, comma separated ()");
+    } else if (title && content && tags == null) {
+      const tag = generateTags(text);
+      const post = `<b>${title}</b>\n\n${content}\n\n ${tag} `;
+      const channel = await ctx.api.getChat(channelID);
+      await bot.api.sendMessage(channel.id, post, { parse_mode: "HTML" });
+      ctx.reply("posted✅✅");
+      // set  tags and post to the channels
+    } else {
+      ctx.session.title = text;
+      ctx.reply("Now, give me the content of your post");
     }
-  } else if (task === "comment") {
-    ctx.reply("comment state");
+  } else if (task === "comment" && postToReply) {
+    // post the comment to the channel's group
+    ctx.reply("c");
   } else {
-    ctx.reply(
-      "What did you send the text for? \n if you want post click /post"
-    );
+    console.log(ctx.session);
+    ctx.reply("What is the text for? \n if you want post click /post");
   }
 });
 
