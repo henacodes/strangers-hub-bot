@@ -1,4 +1,5 @@
 import { Bot, session, webhookCallback } from "grammy";
+import express from "express";
 import dotenv from "dotenv";
 import {
   initialState,
@@ -10,6 +11,7 @@ import {
 // load environments
 dotenv.config();
 
+const app = express();
 // connect to the bot
 const bot = new Bot(process.env.BOT_TOKEN);
 
@@ -87,4 +89,12 @@ bot.on("message:text", async (ctx) => {
 });
 
 bot.start();
+
+app.use(express.json());
+app.get("/", (req, res) => {
+  return res.send("<h1> Server woking perfect </h1>");
+});
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 export default webhookCallback(bot, "http");
