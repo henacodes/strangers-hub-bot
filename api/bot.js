@@ -1,4 +1,4 @@
-import { Bot, session } from "grammy";
+import { Bot, session, webhookCallback } from "grammy";
 import dotenv from "dotenv";
 import {
   initialState,
@@ -87,3 +87,4 @@ bot.on("message:text", async (ctx) => {
 });
 
 bot.start();
+export default webhookCallback(bot, "http");
