@@ -38,30 +38,51 @@ bot.command("post", (ctx) => {
   ctx.session.task = "post";
   ctx.reply("Give me the title of the post ");
 });
+
 bot.on("message:text", async (ctx) => {
-  const { task, title, content, comment, postToReply, tags } = ctx.session;
-  const { text } = ctx.message;
-  if (task === "post") {
-    if (title && content == null) {
-      ctx.session.content = text;
-      ctx.reply("give me some tags, comma separated ()");
-    } else if (title && content && tags == null) {
-      const tag = generateTags(text);
-      const post = `<b>${title}</b>\n\n${content}\n\n ${tag} `;
-      const channel = await ctx.api.getChat(channelID);
-      await bot.api.sendMessage(channel.id, post, { parse_mode: "HTML" });
-      ctx.reply("posted✅✅");
-      // set  tags and post to the channels
+  ctx.deleteMessage();
+  // check if its in the bot
+  if (ctx.chat.type == "private") {
+    const { task, title, content, comment, postToReply, tags } = ctx.session;
+    const { text } = ctx.message;
+    if (task === "post") {
+      if (title && content == null) {
+        ctx.session.content = text;
+        ctx.reply("give me some tags, comma separated ()");
+      } else if (title && content && tags == null) {
+        const tag = generateTags(text);
+        const post = `<b>${title}</b>\n\n${content}\n\n ${tag} `;
+        const channel = await ctx.api.getChat(channelID);
+        await bot.api.sendMessage(channel.id, post, {
+          parse_mode: "HTML",
+        });
+        ctx.reply("posted✅✅");
+        ctx.session = initialState();
+        // set  tags and post to the channels
+      } else {
+        ctx.session.title = text;
+        ctx.reply("Now, give me the content of your post");
+      }
     } else {
-      ctx.session.title = text;
-      ctx.reply("Now, give me the content of your post");
+      ctx.reply("What is the text for? \n if you want post click /post");
     }
-  } else if (task === "comment" && postToReply) {
-    // post the comment to the channel's group
-    ctx.reply("c");
+    // the below code works for for messages in a group
   } else {
-    console.log(ctx.session);
-    ctx.reply("What is the text for? \n if you want post click /post");
+    //check if its a reply to a message
+    if (ctx.message.reply_to_message) {
+      // delete the message and send the text by the bot
+      const originalMessageId = ctx.message.reply_to_message.message_id;
+      const replyMessage = ctx.message.text;
+      try {
+        await ctx.reply(replyMessage, {
+          reply_to_message_id: originalMessageId,
+        });
+      } catch (error) {
+        ctx.reply(error.message);
+      }
+    } else {
+      ctx.reply("CAUTION⚠️: this group is only for reply purposes‼️‼️‼️‼️");
+    }
   }
 });
 
