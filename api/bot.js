@@ -21,6 +21,7 @@ const channelID = process.env.CHANNEL_ID;
 bot.use(session({ initial: initialState }));
 
 bot.command("start", (ctx) => {
+  console.log(ctx);
   //console.log(ctx.match);
   ctx.reply(
     "Welcome to <b>strangers-hub</b> bot. \n \n\n To post a post, use /post \n for help /help ",
@@ -42,7 +43,6 @@ bot.command("post", (ctx) => {
 });
 
 bot.on("message:text", async (ctx) => {
-  ctx.deleteMessage();
   // check if its in the bot
   if (ctx.chat.type == "private") {
     const { task, title, content, comment, postToReply, tags } = ctx.session;
@@ -73,6 +73,7 @@ bot.on("message:text", async (ctx) => {
     //check if its a reply to a message
     if (ctx.message.reply_to_message) {
       // delete the message and send the text by the bot
+      ctx.deleteMessage();
       const originalMessageId = ctx.message.reply_to_message.message_id;
       const replyMessage = ctx.message.text;
       try {
@@ -82,8 +83,6 @@ bot.on("message:text", async (ctx) => {
       } catch (error) {
         ctx.reply(error.message);
       }
-    } else {
-      ctx.reply("CAUTION⚠️: this group is only for reply purposes‼️‼️‼️‼️");
     }
   }
 });
